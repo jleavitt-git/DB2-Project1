@@ -1,3 +1,12 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+
 import static java.lang.System.exit;
 
 public class Frame {
@@ -35,17 +44,16 @@ public class Frame {
         StringBuilder sb = new StringBuilder();
         int recordIndex = record*40;
         for(int i = 0; i < 40; i++){
-            sb.append(getContentAtIndex(recordIndex));
-            recordIndex++;
+            sb.append((char) getContentAtIndex(recordIndex+i));
         }
         return sb.toString();
     }
 
-    public void updateRecord(int record, byte[] data){
+    public void updateRecord(int record, String data){
         int recordIndex = record*40;
+        char[] bytes = data.toCharArray();
         for(int i = 0; i < 40; i++){
-            setContentAtIndex(recordIndex, data[i]);
-            recordIndex++;
+            setContentAtIndex(recordIndex+i, (byte) bytes[i]);
         }
         dirty = true;
     }
@@ -62,6 +70,22 @@ public class Frame {
     }
     public void setContent(byte[] content) {
         this.content = content;
+    }
+
+    public void writeToFile() throws IOException {
+        String filename = "F" + getBlockId() + ".txt";
+        BufferedWriter file = new BufferedWriter(new FileWriter(filename));
+        for(int i = 0; i < content.length; i++){
+            file.write((char) content[i]);
+        }
+        file.close();
+    }
+
+    public void loadFromFile(String fileName) throws IOException {
+        Path path = Paths.get(fileName);
+        content = Files.readAllBytes(path);
+        //System.out.println("DEBUG " + path.toString().substring(1,2));
+        setBlockId(Integer.parseInt(path.toString().substring(1,2)));
     }
 
     public boolean isDirty() {
