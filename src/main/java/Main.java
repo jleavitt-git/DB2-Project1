@@ -28,12 +28,18 @@ public class Main {
         while(true){
             System.out.println("Ready for next command...");
             String[] in = input.readLine().split(" ");
+            String setArgs = "";
+            if(in.length > 2){
+                for(int i = 2; i < in.length; i++){
+                    setArgs+=in[i] + " ";
+                }
+            }
 
             //Switch on command or error on unknown command, automatically makes all commands uppercase
             switch (in[0].toUpperCase()) {
                 case "GET" -> get(Integer.parseInt(in[1]));
                 //SET command takes 2, 3, 4, 5 because of record layout being split by space
-                case "SET" -> set(Integer.parseInt(in[1]), in[2] + " " + in[3] + " " + in[4] + " " + in[5]);
+                case "SET" -> set(Integer.parseInt(in[1]), setArgs);
                 case "PIN" -> pin(Integer.parseInt(in[1]));
                 case "UNPIN" -> unpin(Integer.parseInt(in[1]));
                 case "EXIT" -> quitApp();
@@ -79,13 +85,18 @@ public class Main {
      * prints data if successful otherwise prints error
      */
     public static void set(int k, String s) throws IOException {
+        //System.out.println("Data: " + s);
         if(1 > k|| k > 699){
             System.out.println("Error, no record at that location");
             return;
         }
-        if(s.length() != 40){
+        if(s.length() != 43){
             System.out.println("Error, provided data is not 40 bytes");
+            System.out.println("LENG: " + s.length() + " DATA: " + s);
             return;
+        }
+        else{
+            s = s.substring(1, 41);
         }
         boolean set = buf.set(k, s);
         if(!set){

@@ -42,7 +42,7 @@ public class BufferPool {
         }
         //Frame not loaded
         if(frameNum == -1){
-            System.out.println("Need to get frame");
+            System.out.println("File is not in buffer, need to load it");
             frameNum = getEmptyFrame();
             if(frameNum == -1){
                 //No available frame
@@ -52,7 +52,7 @@ public class BufferPool {
             //System.out.println("Loading into frame #" + frameNum);
             buffers[frameNum].loadFromFile(fileName);
         }
-        System.out.println("Loading data from frame #" + frameNum);
+        System.out.println("Loading data from File #"+ file +", frame #" + frameNum);
         return buffers[frameNum].getRecord(record);
     }
 
@@ -78,14 +78,14 @@ public class BufferPool {
         }
         //Frame not loaded
         if(frameNum == -1){
-            System.out.println("Need to get frame");
+            System.out.println("File is not in buffer, need to load it");
             frameNum = getEmptyFrame();
             if(frameNum == -1){
                 //No available frame
                 return false;
             }
         }
-        System.out.println("Setting data into frame #" + frameNum);
+        System.out.println("Setting data from File #"+ file +" into frame #" + frameNum);
         buffers[frameNum].updateRecord(record, data);
         return true;
     }
@@ -107,13 +107,14 @@ public class BufferPool {
                     System.out.println("Block #" + buffers[i].getBlockId() + " is already pinned");
                 }
                 else {
+                    System.out.println("Pinning block in frame #" + i);
                     buffers[i].setPinned(true);
                 }
                 return true;
             }
         }
         //Block is not in memory so load it
-        System.out.println("Need to get frame");
+        System.out.println("File is not in buffer, need to load it");
         int frameNum = getEmptyFrame();
         if(frameNum == -1){
             //No available frame
@@ -125,6 +126,7 @@ public class BufferPool {
             System.out.println("Block #" + buffers[frameNum].getBlockId() + " is already unpinned");
         }
         else {
+            System.out.println("Pinning block in frame #" + frameNum);
             buffers[frameNum].setPinned(true);
         }
         return true;
@@ -143,17 +145,18 @@ public class BufferPool {
     public boolean unpin(int bid) throws IOException {
         for(int i = 0; i < buffers.length; i++){
             if(buffers[i].getBlockId() == bid){
-                if(buffers[i].isPinned()){
-                    System.out.println("Block #" + buffers[i].getBlockId() + " is already pinned");
+                if(!buffers[i].isPinned()){
+                    System.out.println("Block #" + buffers[i].getBlockId() + " is already unpinned");
                 }
                 else {
+                    System.out.println("Unpinning block in frame #" + i);
                     buffers[i].setPinned(false);
                 }
                 return true;
             }
         }
         //Block is not in memory so load it
-        System.out.println("Need to get frame");
+        System.out.println("File is not in buffer, need to load it");
         int frameNum = getEmptyFrame();
         if(frameNum == -1){
             //No available frame
@@ -161,10 +164,11 @@ public class BufferPool {
         }
         String fileName = "F" + bid + ".txt";
         buffers[frameNum].loadFromFile(fileName);
-        if(buffers[frameNum].isPinned()){
-            System.out.println("Block #" + buffers[frameNum].getBlockId() + " is already pinned");
+        if(!buffers[frameNum].isPinned()){
+            System.out.println("Block #" + buffers[frameNum].getBlockId() + " is already unpinned");
         }
         else {
+            System.out.println("Unpinning block in frame #" + frameNum);
             buffers[frameNum].setPinned(false);
         }
         return true;
