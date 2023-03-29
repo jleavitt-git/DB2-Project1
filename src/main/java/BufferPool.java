@@ -1,13 +1,17 @@
 import java.io.IOException;
 
 public class BufferPool {
-    private Frame[] buffers;
+    private Frame[] buffers; //Array of buffers
 
-    private int nextToEvict;
+    private int nextToEvict; //Number of the frame to be evicted next, Round-Robin style.
 
     public BufferPool(){
     }
 
+    /**
+     * Initializes the bufferPool with a variable amount of Frames
+     * @param poolSize amount of Frames
+     */
     public void initialize(int poolSize){
         buffers = new Frame[poolSize];
         nextToEvict = 0;
@@ -17,7 +21,14 @@ public class BufferPool {
         }
     }
 
-    //Given K record, first find loaded frame, else load frame
+    /**
+     * Attempt to find frame in the buffer containing the data, otherwise get an empty (unpinned) frame
+     * to load the data into. Then return the data. return null if data is not in a frame and the buffer is full.
+     *
+     * @param k record number
+     * @return String if successfull, else null
+     * @throws IOException
+     */
     public String get(int k) throws IOException {
         int file = (int) Math.floor((double)k / 100.00);
         file++; //Record 001 is file 1
@@ -45,6 +56,15 @@ public class BufferPool {
         return buffers[frameNum].getRecord(record);
     }
 
+    /**
+     * Attempt to find Frame with the block already loaded, else find an empty (unpinned) frame to load the data into,
+     * then update the record. Also set flag to dirty, so it will be written out next time it's evicted.
+     *
+     * @param k record number
+     * @param data String of data to be set at k record number
+     * @return True if record update was successful, else False
+     * @throws IOException
+     */
     public boolean set(int k, String data) throws IOException {
         int file = (int) Math.floor((double)k / 100.00);
         file++; //Record 001 is file 1
@@ -70,6 +90,16 @@ public class BufferPool {
         return true;
     }
 
+    /**
+     * Attempt to pin passed block number. If the frame is in the bufferPool then we check if it's already pinned,
+     * and print if so and return True. If it's not pinned we pin it and return true.
+     * If it's not in the bufferPool it is loaded in if possible, otherwise return false. If it is loaded in then
+     * do the same logic as before.
+     * false.
+     * @param bid block number
+     * @return
+     * @throws IOException
+     */
     public boolean pin(int bid) throws IOException {
         for(int i = 0; i < buffers.length; i++){
             if(buffers[i].getBlockId() == bid){
@@ -100,6 +130,16 @@ public class BufferPool {
         return true;
     }
 
+    /**
+     * Attempt to pin passed block number. If the frame is in the bufferPool then we check if it's already unpinned,
+     * and print if so and return True. If it's not unpinned we unpin it and return true.
+     * If it's not in the bufferPool it is loaded in if possible, otherwise return false. If it is loaded in then
+     * do the same logic as before.
+     * false.
+     * @param bid block number
+     * @return
+     * @throws IOException
+     */
     public boolean unpin(int bid) throws IOException {
         for(int i = 0; i < buffers.length; i++){
             if(buffers[i].getBlockId() == bid){
@@ -130,6 +170,15 @@ public class BufferPool {
         return true;
     }
 
+    /**
+     * Attempts to find a frame that can be overwritten. Round-robin style of eviction with the nextToEvict variable.
+     * If all blocks in the buffer are full then return -1.
+     * If the next to be evicted file is unpinned and dirty, we first write the Frame to disk before returning the
+     * frame number.
+     *
+     * @return id of block that can be overwritten
+     * @throws IOException
+     */
     public int getEmptyFrame() throws IOException {
         for(int i = 0; i < buffers.length; i++){
             if(buffers[i].getBlockId() == -1){

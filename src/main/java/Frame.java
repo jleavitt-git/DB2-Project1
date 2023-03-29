@@ -10,36 +10,35 @@ import java.util.Arrays;
 import static java.lang.System.exit;
 
 public class Frame {
-    private byte[] content;
-    private boolean dirty;
-    private boolean pinned;
-    private int  blockId;
+    private byte[] content; //Data
+    private boolean dirty; //Dirty flag
+    private boolean pinned; //Pinned flag
+    private int  blockId; //Block id of this frame
 
-    public Frame(int bid){
-        content = new byte[4096];
-        blockId = bid;
-        dirty = false;
-        pinned = false;
-    }
-
-    public Frame(int bid, byte[] content){
-        if(content.length != 4096){
-            System.out.println("Error: Content is not of size [4096]");
-            exit(1);
-        }
-        blockId = bid;
-        this.content = content;
-        dirty = false;
-        pinned = false;
-    }
-
+    /**
+     * Init empty Frame
+     */
     public Frame(){
         blockId = -1;
         content = new byte[4096];
         dirty = false;
         pinned = false;
     }
+    /**
+     * Init empty Frame
+     */
+    public void init(){
+        blockId = -1;
+        content = new byte[4096];
+        dirty = false;
+        pinned = false;
+    }
 
+    /**
+     * Takes the record number (not record and file number) and returns a string of the record
+     * @param record record number (1-100) of this frame.
+     * @return String of data from that record
+     */
     public String getRecord(int record){
         StringBuilder sb = new StringBuilder();
         int recordIndex = record*40;
@@ -49,6 +48,11 @@ public class Frame {
         return sb.toString();
     }
 
+    /**
+     * Takes the record number (not record and file number) and updates the record with new data.
+     * @param record record number (1-100) of this frame
+     * @param data String of data to update record with
+     */
     public void updateRecord(int record, String data){
         int recordIndex = record*40;
         char[] bytes = data.toCharArray();
@@ -58,20 +62,28 @@ public class Frame {
         dirty = true;
     }
 
+    /**
+     * Return the data at a given index of the content array
+     * @param index index to access of the content array
+     * @return the data within the content array at the given index
+     */
     public byte getContentAtIndex(int index){
         return content[index];
     }
-    public byte[] getContent() {
-        return content;
-    }
 
+    /**
+     * Set the given data to the passed index of the content array
+     * @param index index to update
+     * @param data byte of data to update with
+     */
     public void setContentAtIndex(int index, byte data){
         content[index] = data;
     }
-    public void setContent(byte[] content) {
-        this.content = content;
-    }
 
+    /**
+     * Write the entire contents of this frame to disk (file) of the given blockID as chars (not bytes)
+     * @throws IOException
+     */
     public void writeToFile() throws IOException {
         String filename = "F" + getBlockId() + ".txt";
         BufferedWriter file = new BufferedWriter(new FileWriter(filename));
@@ -81,6 +93,11 @@ public class Frame {
         file.close();
     }
 
+    /**
+     * Load the entire contents of a file (Block) from disk into this frame. Also set blockId
+     * @param fileName name of file
+     * @throws IOException
+     */
     public void loadFromFile(String fileName) throws IOException {
         Path path = Paths.get(fileName);
         content = Files.readAllBytes(path);
